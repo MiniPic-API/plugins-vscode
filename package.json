@@ -1,0 +1,180 @@
+{
+  "name": "minipic-vscode",
+  "displayName": "MiniPic 图片压缩",
+  "description": "在 VSCode 内一键压缩 PNG/JPEG/WebP/GIF/AVIF/TIFF，由 MiniPic 自研引擎驱动（minipic.cn）。",
+  "version": "0.1.2",
+  "publisher": "minipic",
+  "license": "SEE LICENSE IN LICENSE",
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "image",
+    "compress",
+    "tinypng",
+    "png",
+    "webp",
+    "图片压缩"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MiniPic-API/plugins-vscode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MiniPic-API/plugins-vscode/issues"
+  },
+  "homepage": "https://minipic.cn",
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "minipic.compress",
+        "title": "MiniPic: 压缩图片",
+        "category": "MiniPic"
+      },
+      {
+        "command": "minipic.setApiKey",
+        "title": "MiniPic: 设置 API Key",
+        "category": "MiniPic"
+      },
+      {
+        "command": "minipic.clearApiKey",
+        "title": "MiniPic: 清除 API Key",
+        "category": "MiniPic"
+      },
+      {
+        "command": "minipic.showUsage",
+        "title": "MiniPic: 查看用量",
+        "category": "MiniPic"
+      },
+      {
+        "command": "minipic.toggleAutoCompress",
+        "title": "MiniPic: 切换自动压缩",
+        "category": "MiniPic"
+      },
+      {
+        "command": "minipic.convertToWebp",
+        "title": "MiniPic: 转 WebP 并替换引用",
+        "category": "MiniPic"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "minipic.compress",
+          "when": "resourceExtname =~ /\\.(png|jpe?g|webp|gif|avif|tiff?|bmp)$/i || explorerResourceIsFolder",
+          "group": "7_modification@99"
+        },
+        {
+          "command": "minipic.convertToWebp",
+          "when": "explorerResourceIsFolder || resourceExtname =~ /\\.(png|jpe?g|bmp|tiff?)$/i",
+          "group": "7_modification@100"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "minipic.compress",
+          "when": "false"
+        },
+        {
+          "command": "minipic.convertToWebp",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "MiniPic",
+      "properties": {
+        "minipic.baseUrl": {
+          "type": "string",
+          "default": "https://api.minipic.cn",
+          "markdownDescription": "MiniPic API 服务地址。私有化部署时改为自己的网关地址。"
+        },
+        "minipic.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "MiniPic API Key（`mp_live_...`）。推荐改用命令 **MiniPic: 设置 API Key** 安全存储；此设置项仅作明文回退，会被 settings.json 同步泄漏，谨慎使用。"
+        },
+        "minipic.quality": {
+          "type": "string",
+          "enum": [
+            "smart",
+            "high",
+            "extreme",
+            "lossless"
+          ],
+          "enumDescriptions": [
+            "智能：引擎自动在体积与画质间取最优（默认）",
+            "高保真：尽量保留画质",
+            "极限：尽量压小体积",
+            "无损：不损失任何像素信息"
+          ],
+          "default": "smart",
+          "description": "压缩质量档位。"
+        },
+        "minipic.format": {
+          "type": "string",
+          "enum": [
+            "keep",
+            "png",
+            "jpeg",
+            "webp",
+            "gif",
+            "avif",
+            "tiff"
+          ],
+          "enumDescriptions": [
+            "保持原格式（默认）",
+            "转 PNG",
+            "转 JPEG",
+            "转 WebP（体积通常更小）",
+            "转 GIF",
+            "转 AVIF（同画质下体积最小）",
+            "转 TIFF（无损）"
+          ],
+          "default": "keep",
+          "description": "输出格式。转换为不同格式时会生成新文件（见 keepOriginalOnConvert）。"
+        },
+        "minipic.skipIfLarger": {
+          "type": "boolean",
+          "default": true,
+          "description": "保持原格式时，若压缩结果反而更大则跳过、不覆盖原图。"
+        },
+        "minipic.keepOriginalOnConvert": {
+          "type": "boolean",
+          "default": true,
+          "description": "转换为不同格式时保留原文件（关闭则压缩成功后删除原文件）。"
+        },
+        "minipic.maxFileSizeMB": {
+          "type": "number",
+          "default": 80,
+          "description": "跳过超过该大小（MB）的文件，避免触发服务端 413。"
+        },
+        "minipic.autoCompress": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "监听工作区图片的新增/改动并自动压缩（按当前质量与格式设置）。**注意：会消耗配额**，建议确认计费策略后开启。可用命令 **MiniPic: 切换自动压缩** 快速开关。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "tsc --noEmit -p ./",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.84.0",
+    "typescript": "^5.4.0"
+  }
+}
